@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Semana1</string>
+    <string name="str_usuario">Usuario</string>
+    <string name="str_password">Contraseña</string>
+    <string name="str_iniciar">Iniciar Sesión</string>
+    <string name="str_recuperar">Olvide Contraseña</string>
+    <string name="str_registrarse">Registrarse</string>
+    <string name="str_separador">  |  </string>
 </resources>
