@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/GreetingCard.iml" filepath="$PROJECT_DIR$/.idea/modules/GreetingCard.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/GreetingCard.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/GreetingCard.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/GreetingCard.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/GreetingCard.app.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/GreetingCard.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/GreetingCard.app.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/GreetingCard.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/GreetingCard.app.unitTest.iml" />
+    </modules>
+  </component>
+</project>
