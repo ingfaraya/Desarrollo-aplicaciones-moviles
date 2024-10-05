@@ -2,6 +2,7 @@ package com.example.sumativa
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -15,6 +16,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,24 +29,23 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class HomeActivity : ComponentActivity() {
-    class Persona(nombre: String, avatar: Int)
-
+class SocialMediaActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HomeScreen()
+            SocialMediaScreen()
         }
     }
 
     @Composable
-    fun HomeScreen() {
+    fun SocialMediaScreen() {
         val gradientColors = listOf(
             Color(0xFFFFFFFF),
             Color(0xFFF8F8F8)
@@ -53,23 +55,22 @@ class HomeActivity : ComponentActivity() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Brush.verticalGradient(gradientColors)),
-            verticalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.SpaceBetween, // Espacio entre el contenido y la barra de navegación
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Card de saludo personalizada
+            // Card de saludo personalizada con logo
             GreetingCard()
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Lista de opciones de navegación
-            NavigationList()
+            // Lista de redes sociales
+            SocialMediaList()
 
-            // Botones al final
-            BottomButtons()
-
-            Spacer(modifier = Modifier.height(30.dp))
+            // Barra de navegación inferior
+            BottomNavigationBar()
+            Spacer(modifier = Modifier.height(50.dp)) // Espacio adicional en la parte inferior
         }
     }
 
@@ -94,61 +95,48 @@ class HomeActivity : ComponentActivity() {
                 horizontalArrangement = Arrangement.Start
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.avatar2),
+                    painter = painterResource(id = R.drawable.avatar2), // Cambia al recurso adecuado
                     contentDescription = null,
                     modifier = Modifier.size(80.dp)
                 )
                 Text(
-                    text = "Bienvenido parrillero!!",
+                    text = "Redes Sociales de Parrilladas",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    modifier = Modifier.padding(start = 16.dp)
+                    modifier = Modifier.padding(20.dp)
                 )
             }
         }
     }
 
     @Composable
-    fun NavigationList() {
-        val options = listOf(
-            "Mejores Videos de Asados",
-            "Mejores Playlists de Música para Asados",
-            "Mejores Redes Sociales para Asados",
-            "Mejores Libros de Recetas para Asados"
-        )
-        val icons = listOf(
-            R.drawable.logo,
-            R.drawable.logo,
-            R.drawable.logo,
-            R.drawable.logo
+    fun SocialMediaList() {
+        val socialMediaLinks = listOf(
+            SocialMedia("Facebook - Parrilladas Chilenas", "https://www.facebook.com/restauranterinconcampesino"),
+            SocialMedia("Instagram - Parrilleros de Chile", "https://www.instagram.com/parrillerosdechile/"),
+            SocialMedia("TikTok - Asados y Parrillas", "https://www.tiktok.com/@asados.parrillas?is_from_webapp=1&sender_device=pc"),
+            SocialMedia("Twitter - BBQ Lovers Chile", "https://twitter.com/BBQLoversChile")
         )
 
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(16.dp)
         ) {
-            options.forEachIndexed { index, option ->
-                NavigationCard(option, icons[index]) {
-                    when (index) {
-                        0 -> startActivity(Intent(this@HomeActivity, VideosActivity::class.java))
-                        1 -> startActivity(Intent(this@HomeActivity, MusicActivity::class.java))
-                        2 -> startActivity(Intent(this@HomeActivity, SocialMediaActivity::class.java))
-                        3 -> startActivity(Intent(this@HomeActivity, BooksActivity::class.java))
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
+            items(socialMediaLinks) { socialMedia ->
+                SocialMediaItem(socialMedia)
             }
         }
     }
 
     @Composable
-    fun NavigationCard(option: String, icon: Int, onClick: () -> Unit) {
+    fun SocialMediaItem(socialMedia: SocialMedia) {
         val context = LocalContext.current
         val coroutineScope = rememberCoroutineScope()
 
         var shouldShake by remember { mutableStateOf(false) }
+
         val shakeOffset by animateFloatAsState(
             targetValue = if (shouldShake) 10f else 0f,
             animationSpec = tween(durationMillis = 100),
@@ -165,14 +153,14 @@ class HomeActivity : ComponentActivity() {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp)
+                .padding(8.dp)
                 .offset(x = shakeOffset.dp)
                 .clickable {
                     vibratePhone(context)
                     shouldShake = true
-                    onClick()
+                    openSocialMedia(context, socialMedia.url)
                 },
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             shape = RoundedCornerShape(8.dp),
             colors = CardDefaults.cardColors(containerColor = Color.Black)
         ) {
@@ -184,13 +172,13 @@ class HomeActivity : ComponentActivity() {
                 horizontalArrangement = Arrangement.Start
             ) {
                 Image(
-                    painter = painterResource(id = icon),
+                    painter = painterResource(id = R.drawable.logo), // Cambia al recurso adecuado
                     contentDescription = null,
                     modifier = Modifier.size(50.dp)
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
-                    text = option,
+                    text = socialMedia.nombre,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -200,46 +188,68 @@ class HomeActivity : ComponentActivity() {
     }
 
     @Composable
-    fun BottomButtons() {
+    fun BottomNavigationBar() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
-                iconRes = R.drawable.home,
-                onClick = { startActivity(Intent(this@HomeActivity, HomeActivity::class.java)) }
+                iconRes = R.drawable.home, // Icono de home
+                onClick = { startActivity(Intent(this@SocialMediaActivity, HomeActivity::class.java)) },
+                size = 70.dp // Tamaño ajustado para los botones
             )
             IconButton(
-                iconRes = R.drawable.ayuda,
-                onClick = { startActivity(Intent(this@HomeActivity, HelpActivity::class.java)) }
+                iconRes = R.drawable.ayuda, // Icono de ayuda
+                onClick = { startActivity(Intent(this@SocialMediaActivity, HelpActivity::class.java)) },
+                size = 70.dp // Tamaño ajustado para los botones
             )
             IconButton(
-                iconRes = R.drawable.configuracion,
-                onClick = { startActivity(Intent(this@HomeActivity, SettingsActivity::class.java)) }
+                iconRes = R.drawable.configuracion, // Icono de configuraciones
+                onClick = { startActivity(Intent(this@SocialMediaActivity, SettingsActivity::class.java)) },
+                size = 70.dp // Tamaño ajustado para los botones
             )
         }
     }
 
     @Composable
-    fun IconButton(iconRes: Int, onClick: () -> Unit) {
-        Card(
-            modifier = Modifier
-                .size(80.dp)
-                .clickable { onClick() },
-            shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Black)
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Image(
-                    painter = painterResource(id = iconRes),
-                    contentDescription = null
-                )
+    fun IconButton(iconRes: Int, onClick: () -> Unit, size: Dp) {
+        val context = LocalContext.current
+        val coroutineScope = rememberCoroutineScope()
+
+        var shouldShake by remember { mutableStateOf(false) }
+
+        val shakeOffset by animateFloatAsState(
+            targetValue = if (shouldShake) 10f else 0f,
+            animationSpec = tween(durationMillis = 100),
+            finishedListener = {
+                if (shouldShake) {
+                    coroutineScope.launch {
+                        delay(100)
+                        shouldShake = false
+                    }
+                }
             }
+        )
+
+        Box(
+            modifier = Modifier
+                .size(size)
+                .offset(x = shakeOffset.dp)
+                .clickable {
+                    vibratePhone(context)
+                    shouldShake = true
+                    onClick()
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(size)
+            )
         }
     }
 
@@ -252,9 +262,17 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
+    fun openSocialMedia(context: Context, url: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        intent.putExtra(Intent.EXTRA_REFERRER, Uri.parse("android-app://${context.packageName}"))
+        context.startActivity(intent)
+    }
+
     @Preview
     @Composable
-    fun VistaPrevia() {
-        HomeScreen()
+    fun PreviewSocialMediaScreen() {
+        SocialMediaScreen()
     }
+
+    data class SocialMedia(val nombre: String, val url: String)
 }

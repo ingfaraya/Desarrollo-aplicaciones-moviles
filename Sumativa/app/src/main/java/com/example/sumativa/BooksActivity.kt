@@ -2,6 +2,7 @@ package com.example.sumativa
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -15,6 +16,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,19 +34,17 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class HomeActivity : ComponentActivity() {
-    class Persona(nombre: String, avatar: Int)
-
+class BooksActivity<AppDatabase> : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HomeScreen()
+            BooksScreen()
         }
     }
 
     @Composable
-    fun HomeScreen() {
+    fun BooksScreen() {
         val gradientColors = listOf(
             Color(0xFFFFFFFF),
             Color(0xFFF8F8F8)
@@ -54,22 +55,22 @@ class HomeActivity : ComponentActivity() {
                 .fillMaxSize()
                 .background(Brush.verticalGradient(gradientColors)),
             verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally // Centrar horizontalmente los elementos
         ) {
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(30.dp))  // Separación inicial superior
 
-            // Card de saludo personalizada
+            // Tarjeta de saludo
             GreetingCard()
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Lista de opciones de navegación
-            NavigationList()
+            // Lista de libros
+            BookList()
 
-            // Botones al final
+            // Botones inferiores
             BottomButtons()
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(16.dp)) // Separación inferior para la barra de botones
         }
     }
 
@@ -78,7 +79,7 @@ class HomeActivity : ComponentActivity() {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp),  // Asegurar que la tarjeta tenga espacio lateral
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             shape = RoundedCornerShape(8.dp),
             colors = CardDefaults.cardColors(
@@ -94,60 +95,48 @@ class HomeActivity : ComponentActivity() {
                 horizontalArrangement = Arrangement.Start
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.avatar2),
+                    painter = painterResource(id = R.drawable.avatar2), // Cambia al recurso adecuado
                     contentDescription = null,
-                    modifier = Modifier.size(80.dp)
+                    modifier = Modifier.size(80.dp)  // Tamaño de imagen consistente
                 )
                 Text(
-                    text = "Bienvenido parrillero!!",
+                    text = "Libros de Recetas para Asados",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    modifier = Modifier.padding(start = 16.dp)
+                    modifier = Modifier.padding(start = 20.dp)
                 )
             }
         }
     }
 
     @Composable
-    fun NavigationList() {
-        val options = listOf(
-            "Mejores Videos de Asados",
-            "Mejores Playlists de Música para Asados",
-            "Mejores Redes Sociales para Asados",
-            "Mejores Libros de Recetas para Asados"
-        )
-        val icons = listOf(
-            R.drawable.logo,
-            R.drawable.logo,
-            R.drawable.logo,
-            R.drawable.logo
+    fun BookList() {
+        val books = listOf(
+            Book("La guía máxima de la carne", "https://progcarne.com/storage/app/media/sabores/edicion-xii.pdf"),
+            Book("Manual de Cortes", "https://www.inac.uy/innovaportal/file/6726/1/manual_abasto_low.pdf"),
+            Book("Manual del Parrillero Criollo", "https://todorecurso.files.wordpress.com/2010/04/manual-del-parrillero-criollo-litart.pdf"),
+            Book("Toda La Carne en el Asador", "https://velocidadcuchara.com/descargas/recetarios/pdf/toda-la-carne-en-el-asador.pdf")
         )
 
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(16.dp)  // Consistencia en la separación lateral
         ) {
-            options.forEachIndexed { index, option ->
-                NavigationCard(option, icons[index]) {
-                    when (index) {
-                        0 -> startActivity(Intent(this@HomeActivity, VideosActivity::class.java))
-                        1 -> startActivity(Intent(this@HomeActivity, MusicActivity::class.java))
-                        2 -> startActivity(Intent(this@HomeActivity, SocialMediaActivity::class.java))
-                        3 -> startActivity(Intent(this@HomeActivity, BooksActivity::class.java))
-                    }
+            items(books) { book ->
+                BookItem(book) {
+                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(book.url))
+                    startActivity(browserIntent)
                 }
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
 
     @Composable
-    fun NavigationCard(option: String, icon: Int, onClick: () -> Unit) {
+    fun BookItem(book: Book, onClick: () -> Unit) {
         val context = LocalContext.current
         val coroutineScope = rememberCoroutineScope()
-
         var shouldShake by remember { mutableStateOf(false) }
         val shakeOffset by animateFloatAsState(
             targetValue = if (shouldShake) 10f else 0f,
@@ -165,14 +154,14 @@ class HomeActivity : ComponentActivity() {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp)
+                .padding(vertical = 8.dp) // Espaciado entre elementos
                 .offset(x = shakeOffset.dp)
                 .clickable {
                     vibratePhone(context)
                     shouldShake = true
                     onClick()
                 },
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             shape = RoundedCornerShape(8.dp),
             colors = CardDefaults.cardColors(containerColor = Color.Black)
         ) {
@@ -184,13 +173,13 @@ class HomeActivity : ComponentActivity() {
                 horizontalArrangement = Arrangement.Start
             ) {
                 Image(
-                    painter = painterResource(id = icon),
+                    painter = painterResource(id = R.drawable.logo),
                     contentDescription = null,
                     modifier = Modifier.size(50.dp)
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
-                    text = option,
+                    text = book.nombre,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -207,40 +196,49 @@ class HomeActivity : ComponentActivity() {
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
+            val context = LocalContext.current
+
             IconButton(
-                iconRes = R.drawable.home,
-                onClick = { startActivity(Intent(this@HomeActivity, HomeActivity::class.java)) }
+                iconRes = R.drawable.home,  // Reemplaza con el icono de casa
+                onClick = { startActivity(Intent(context, HomeActivity::class.java)) }
             )
+
             IconButton(
-                iconRes = R.drawable.ayuda,
-                onClick = { startActivity(Intent(this@HomeActivity, HelpActivity::class.java)) }
+                iconRes = R.drawable.ayuda,  // Reemplaza con el icono de ayuda
+                onClick = { startActivity(Intent(context, HelpActivity::class.java)) }
             )
+
             IconButton(
-                iconRes = R.drawable.configuracion,
-                onClick = { startActivity(Intent(this@HomeActivity, SettingsActivity::class.java)) }
+                iconRes = R.drawable.configuracion,  // Reemplaza con el icono de configuraciones
+                onClick = { startActivity(Intent(context, SettingsActivity::class.java)) }
             )
         }
     }
 
     @Composable
     fun IconButton(iconRes: Int, onClick: () -> Unit) {
-        Card(
-            modifier = Modifier
-                .size(80.dp)
-                .clickable { onClick() },
-            shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Black)
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Image(
-                    painter = painterResource(id = iconRes),
-                    contentDescription = null
-                )
+        val context = LocalContext.current
+        var shouldShake by remember { mutableStateOf(false) }
+        val shakeOffset by animateFloatAsState(
+            targetValue = if (shouldShake) 10f else 0f,
+            animationSpec = tween(durationMillis = 100),
+            finishedListener = {
+                shouldShake = false
             }
-        }
+        )
+
+        Image(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            modifier = Modifier
+                .size(80.dp)  // Tamaño fijo de los botones
+                .offset(x = shakeOffset.dp)
+                .clickable {
+                    vibratePhone(context)
+                    shouldShake = true
+                    onClick()
+                }
+        )
     }
 
     fun vibratePhone(context: Context) {
@@ -252,9 +250,11 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
-    @Preview
     @Composable
-    fun VistaPrevia() {
-        HomeScreen()
+    @Preview
+    fun PreviewBooksScreen() {
+        BooksScreen()
     }
+
+    data class Book(val nombre: String, val url: String)
 }

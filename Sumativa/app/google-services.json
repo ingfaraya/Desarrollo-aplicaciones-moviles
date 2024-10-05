@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "582570818997",
+    "project_id": "moviles001a",
+    "storage_bucket": "moviles001a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:582570818997:android:4b6fb619c9c5696675edfc",
+        "android_client_info": {
+          "package_name": "com.example.sumativa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmNFxhV1oan96ED32PYarjmr_cGP4c17A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,208 +1,212 @@
-package com.example.sumativa
-
+import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.widget.Toast
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.sumativa.HomeActivity
+import com.example.sumativa.R
+import com.example.sumativa.RegistroActivity
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen() {
+    var usuario by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val firestore = FirebaseFirestore.getInstance()
+    val coroutineScope = rememberCoroutineScope()
 
-    data class User(val name: String, val password: String)
-
-    val localUsers = listOf(
-        User("Jiara Martins", "password123"),
-        User("John Doe", "qwerty123"),
-        User("Jane Smith", "password456")
+    val gradientColors = listOf(
+        Color(0xFFFFFFFF),
+        Color(0xFFFFFFFF)
     )
 
-    var name by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var loginSuccess by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
-    val context = LocalContext.current
-    Box(
+    // Estados para animación de sacudida
+    var shouldShakeLogin by remember { mutableStateOf(false) }
+    var shouldShakeRecover by remember { mutableStateOf(false) }
+    var shouldShakeRegister by remember { mutableStateOf(false) }
+
+    // Animación de sacudida
+    val shakeOffsetLogin by animateFloatAsState(
+        targetValue = if (shouldShakeLogin) 10f else 0f,
+        animationSpec = tween(durationMillis = 100),
+        finishedListener = {
+            if (shouldShakeLogin) {
+                coroutineScope.launch {
+                    delay(100)
+                    shouldShakeLogin = false
+                }
+            }
+        }
+    )
+
+    val shakeOffsetRecover by animateFloatAsState(
+        targetValue = if (shouldShakeRecover) 10f else 0f,
+        animationSpec = tween(durationMillis = 100),
+        finishedListener = {
+            if (shouldShakeRecover) {
+                coroutineScope.launch {
+                    delay(100)
+                    shouldShakeRecover = false
+                }
+            }
+        }
+    )
+
+    val shakeOffsetRegister by animateFloatAsState(
+        targetValue = if (shouldShakeRegister) 10f else 0f,
+        animationSpec = tween(durationMillis = 100),
+        finishedListener = {
+            if (shouldShakeRegister) {
+                coroutineScope.launch {
+                    delay(100)
+                    shouldShakeRegister = false
+                }
+            }
+        }
+    )
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Brush.verticalGradient(gradientColors)),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Background Image Section
+        Image(
+            painter = painterResource(id = R.drawable.logo), // Cambia por tu logo
+            contentDescription = "Logo",
+            modifier = Modifier.size(180.dp)
+        )
 
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Login Form
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+        // Usuario
+        OutlinedTextField(
+            value = usuario,
+            onValueChange = { usuario = it },
+            label = { Text("Usuario") },
+            modifier = Modifier.padding(16.dp)
+        )
+
+        // Contraseña
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Contraseña") },
+            modifier = Modifier.padding(16.dp),
+            visualTransformation = PasswordVisualTransformation()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Botón de login
+        Button(
+            onClick = {
+                vibratePhone(context)
+                shouldShakeLogin = true
+
+                if (usuario.isNotEmpty() && password.isNotEmpty()) {
+                    // Consultar en Firestore la colección "usuarios"
+                    firestore.collection("usuarios")
+                        .whereEqualTo("usuario", usuario)
+                        .whereEqualTo("password", password)
+                        .get()
+                        .addOnSuccessListener { documents ->
+                            if (!documents.isEmpty) {
+                                Toast.makeText(context, "Inicio de sesión exitoso", Toast.LENGTH_LONG).show()
+                                val intent = Intent(context, HomeActivity::class.java)
+                                context.startActivity(intent)
+                            } else {
+                                Toast.makeText(context, "Usuario o contraseña incorrectos", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                        .addOnFailureListener { exception ->
+                            Toast.makeText(context, "Error al autenticar: ${exception.message}", Toast.LENGTH_LONG).show()
+                        }
+                } else {
+                    Toast.makeText(context, "Por favor, ingrese usuario y contraseña", Toast.LENGTH_LONG).show()
+                }
+            },
             modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 200.dp) // Adjust to overlap with the background
+                .padding(16.dp)
+                .offset(x = shakeOffsetLogin.dp) // Animación de sacudida
         ) {
-            // Logo
-            Image(
-                painter = painterResource(id = R.drawable.logo), // Your logo resource
-                contentDescription = null,
-                modifier = Modifier
-                    .size(180.dp)
-                    .padding(bottom = 24.dp)
-            )
+            Text("Ingresar", fontSize = 18.sp)
+        }
 
-            // Title
-            Text(
-                text = "Bienvenido Parrillero!!",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
+        Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Ingresa para continuar.",
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Name Input
-            TextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("USUARIO") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color.LightGray,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Password Input
-            TextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("CONTRASEÑA") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color.LightGray,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                ),
-                visualTransformation = PasswordVisualTransformation()
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Login Button
-            Button(
+        // Sección de enlaces para "Recuperar Contraseña" y "Registrar"
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            // Botón para recuperar contraseña
+            TextButton(
                 onClick = {
-
-                    val user = localUsers.find { it.name == name && it.password == password }
-                    if (user != null) {
-                        loginSuccess = true
-                        errorMessage = ""
-                        val navigate = Intent(context, HomeActivity::class.java)
-                        context.startActivity(navigate)
-                    } else {
-                        loginSuccess = false
-                        errorMessage = "Nombre incorrecto u contraseña"
-                    }
+                    vibratePhone(context)
+                    shouldShakeRecover = true
+                    // Aquí puedes implementar la lógica para recuperar contraseña
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black
-                ),
-                shape = RoundedCornerShape(8.dp)
+                modifier = Modifier.offset(x = shakeOffsetRecover.dp) // Animación de sacudida
             ) {
-                Text(text = "Ingresar", color = Color.White, fontSize = 16.sp)
+                Text("¿Olvidaste tu contraseña?", fontSize = 14.sp)
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
-            if (errorMessage.isNotEmpty()) {
-                Text(
-                    text = errorMessage,
-                    color = Color.Red,
-                    modifier = Modifier.padding(horizontal = 32.dp)
-                )
-            }
-
-            // Forgot Password and Signup
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
+            // Botón para registrar nuevo usuario
+            TextButton(
+                onClick = {
+                    vibratePhone(context)
+                    shouldShakeRegister = true
+                    val intent = Intent(context, RegistroActivity::class.java)
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.offset(x = shakeOffsetRegister.dp) // Animación de sacudida
             ) {
-                TextButton(onClick = {
-                    val navigate = Intent(context, RecuperarActivity::class.java)
-                    context.startActivity(navigate)
-                }) {
-                    Text("Olvidaste tu cuenta?")
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                TextButton(onClick = {
-                    val navigate = Intent(context, RegistroActivity::class.java)
-                    context.startActivity(navigate)
-                }) {
-                    Text("Registrar!")
-                }
+                Text("Registrar", fontSize = 14.sp)
             }
         }
     }
 }
 
-@Preview
+// Función para hacer vibrar el teléfono
+fun vibratePhone(context: Context) {
+    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)) // Vibración de 100ms
+    } else {
+        vibrator.vibrate(100) // Vibración de 100ms para versiones anteriores a Android Oreo
+    }
+}
+
+@Preview(showBackground = true)
 @Composable
-fun VistaPrevia()
-{
+fun PreviewLoginScreen() {
     LoginScreen()
 }

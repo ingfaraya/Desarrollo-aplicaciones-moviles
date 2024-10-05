@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("com.google.gms.google-services") version "4.4.2" apply true
+
 }
 
 android {
@@ -51,6 +53,22 @@ android {
 
 dependencies {
 
+    // Dependencias para pruebas unitarias
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("org.mockito:mockito-android:3.9.0")
+    testImplementation("org.mockito:mockito-core:3.9.0")
+    testImplementation("org.mockito:mockito-inline:3.9.0")
+    testImplementation("androidx.arch.core:core-testing:2.1.0")  // Para pruebas de LiveData
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.0")  // Para pruebas de coroutines
+
+    // Firebase BOM y Firestore para manejar Firebase Firestore
+    implementation(platform("com.google.firebase:firebase-bom:33.3.0"))
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // Dependencias adicionales de AndroidX (si necesitas)
+    implementation("androidx.test.ext:junit:1.2.1")
+    implementation("androidx.test.espresso:espresso-core:3.6.1")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -59,6 +77,17 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.room.common)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.firebase.auth.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -67,3 +96,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+apply(plugin = "com.google.gms.google-services")
+

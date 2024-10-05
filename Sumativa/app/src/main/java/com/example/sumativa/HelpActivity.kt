@@ -15,6 +15,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,19 +33,17 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class HomeActivity : ComponentActivity() {
-    class Persona(nombre: String, avatar: Int)
-
+class HelpActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HomeScreen()
+            HelpScreen()
         }
     }
 
     @Composable
-    fun HomeScreen() {
+    fun HelpScreen() {
         val gradientColors = listOf(
             Color(0xFFFFFFFF),
             Color(0xFFF8F8F8)
@@ -52,33 +52,33 @@ class HomeActivity : ComponentActivity() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(gradientColors)),
+                .background(Brush.verticalGradient(gradientColors))
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(30.dp))
-
-            // Card de saludo personalizada
-            GreetingCard()
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Lista de opciones de navegación
-            NavigationList()
+            // Card de saludo personalizada con logo
+            HelpGreetingCard()
+
+            // Contenido del tutorial
+            TutorialContent()
 
             // Botones al final
             BottomButtons()
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(30.dp)) // Separación inferior entre botones y final
         }
     }
 
     @Composable
-    fun GreetingCard() {
+    fun HelpGreetingCard() {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp), // Márgenes ajustados
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             shape = RoundedCornerShape(8.dp),
             colors = CardDefaults.cardColors(
@@ -99,7 +99,7 @@ class HomeActivity : ComponentActivity() {
                     modifier = Modifier.size(80.dp)
                 )
                 Text(
-                    text = "Bienvenido parrillero!!",
+                    text = "Tutorial de Uso",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -110,45 +110,77 @@ class HomeActivity : ComponentActivity() {
     }
 
     @Composable
-    fun NavigationList() {
-        val options = listOf(
-            "Mejores Videos de Asados",
-            "Mejores Playlists de Música para Asados",
-            "Mejores Redes Sociales para Asados",
-            "Mejores Libros de Recetas para Asados"
-        )
-        val icons = listOf(
-            R.drawable.logo,
-            R.drawable.logo,
-            R.drawable.logo,
-            R.drawable.logo
-        )
-
+    fun TutorialContent() {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+            modifier = Modifier.padding(24.dp) // Aumentar el margen de los textos
         ) {
-            options.forEachIndexed { index, option ->
-                NavigationCard(option, icons[index]) {
-                    when (index) {
-                        0 -> startActivity(Intent(this@HomeActivity, VideosActivity::class.java))
-                        1 -> startActivity(Intent(this@HomeActivity, MusicActivity::class.java))
-                        2 -> startActivity(Intent(this@HomeActivity, SocialMediaActivity::class.java))
-                        3 -> startActivity(Intent(this@HomeActivity, BooksActivity::class.java))
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+            Text(
+                text = "Bienvenido al tutorial de uso de Asados Chilenos!",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            Text(
+                text = "Aquí te explicaremos cómo usar la aplicación y aprovechar al máximo todas sus funcionalidades. Sigue leyendo para aprender más."
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "1. Cómo navegar en la aplicación",
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+            Text(
+                text = "Utiliza las opciones de la pantalla principal para acceder a diferentes secciones como videos, música, redes sociales y libros de recetas."
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "2. Acceso rápido a recetas",
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+            Text(
+                text = "Puedes encontrar las mejores recetas para asados desde la sección de libros. Algunos de ellos están disponibles para descargar o ver en línea."
+            )
         }
     }
 
     @Composable
-    fun NavigationCard(option: String, icon: Int, onClick: () -> Unit) {
+    fun BottomButtons() {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp), // Ajustes en el margen inferior
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            IconButton(
+                iconRes = R.drawable.home,
+                onClick = { startActivity(Intent(this@HelpActivity, HomeActivity::class.java)) }
+            )
+
+            IconButton(
+                iconRes = R.drawable.ayuda,
+                onClick = { startActivity(Intent(this@HelpActivity, HelpActivity::class.java)) }
+            )
+
+            IconButton(
+                iconRes = R.drawable.configuracion,
+                onClick = { startActivity(Intent(this@HelpActivity, SettingsActivity::class.java)) }
+            )
+        }
+    }
+
+    @Composable
+    fun IconButton(iconRes: Int, onClick: () -> Unit) {
         val context = LocalContext.current
         val coroutineScope = rememberCoroutineScope()
 
         var shouldShake by remember { mutableStateOf(false) }
+
         val shakeOffset by animateFloatAsState(
             targetValue = if (shouldShake) 10f else 0f,
             animationSpec = tween(durationMillis = 100),
@@ -164,70 +196,13 @@ class HomeActivity : ComponentActivity() {
 
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp)
+                .size(80.dp)
                 .offset(x = shakeOffset.dp)
                 .clickable {
                     vibratePhone(context)
                     shouldShake = true
                     onClick()
                 },
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Black)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
-            ) {
-                Image(
-                    painter = painterResource(id = icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(50.dp)
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = option,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-        }
-    }
-
-    @Composable
-    fun BottomButtons() {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            IconButton(
-                iconRes = R.drawable.home,
-                onClick = { startActivity(Intent(this@HomeActivity, HomeActivity::class.java)) }
-            )
-            IconButton(
-                iconRes = R.drawable.ayuda,
-                onClick = { startActivity(Intent(this@HomeActivity, HelpActivity::class.java)) }
-            )
-            IconButton(
-                iconRes = R.drawable.configuracion,
-                onClick = { startActivity(Intent(this@HomeActivity, SettingsActivity::class.java)) }
-            )
-        }
-    }
-
-    @Composable
-    fun IconButton(iconRes: Int, onClick: () -> Unit) {
-        Card(
-            modifier = Modifier
-                .size(80.dp)
-                .clickable { onClick() },
             shape = RoundedCornerShape(8.dp),
             colors = CardDefaults.cardColors(containerColor = Color.Black)
         ) {
@@ -254,7 +229,7 @@ class HomeActivity : ComponentActivity() {
 
     @Preview
     @Composable
-    fun VistaPrevia() {
-        HomeScreen()
+    fun PreviewHelpScreen() {
+        HelpScreen()
     }
 }
